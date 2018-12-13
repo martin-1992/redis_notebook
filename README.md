@@ -1,6 +1,4 @@
-# redis_notebook
-
-redis 设计与实现笔记：
+# redis 设计与实现笔记：
 
 - [简单动态字符串](https://github.com/martin-1992/redis_notebook/blob/master/chapter_2/chapter_2.md)
 - [链表](https://github.com/martin-1992/redis_notebook/blob/master/chapter_3/chapter_3.md)
@@ -8,3 +6,6 @@ redis 设计与实现笔记：
 - [跳跃表](https://github.com/martin-1992/redis_notebook/blob/master/chapter_5/chapter_5.md)
 - [整数集合](https://github.com/martin-1992/redis_notebook/blob/master/chapter_6/chapter_6.md)
 - [压缩列表](https://github.com/martin-1992/redis_notebook/blob/master/chapter_7/chapter_7.md)
+- [对象](https://github.com/martin-1992/redis_notebook/blob/master/chapter_8/chapter_8.md)
+- [数据库](https://github.com/martin-1992/redis_notebook/blob/master/chapter_9/chapter_9.md)
+- [RDB 持久化](https://github.com/martin-1992/redis_notebook/blob/master/chapter_10/chapter_10.md)
