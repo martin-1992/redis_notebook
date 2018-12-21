@@ -9,3 +9,6 @@
 - [对象](https://github.com/martin-1992/redis_notebook/blob/master/chapter_8/chapter_8.md)
 - [数据库](https://github.com/martin-1992/redis_notebook/blob/master/chapter_9/chapter_9.md)
 - [RDB 持久化](https://github.com/martin-1992/redis_notebook/blob/master/chapter_10/chapter_10.md)
+- [AOF 持久化](https://github.com/martin-1992/redis_notebook/blob/master/chapter_11/chapter_11.md)
+- [事件](https://github.com/martin-1992/redis_notebook/blob/master/chapter_12/chapter_12.md)
+- [客户端](https://github.com/martin-1992/redis_notebook/blob/master/chapter_13/chapter_13.md)
