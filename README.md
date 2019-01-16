@@ -12,3 +12,7 @@
 - [AOF 持久化](https://github.com/martin-1992/redis_notebook/blob/master/chapter_11/chapter_11.md)
 - [事件](https://github.com/martin-1992/redis_notebook/blob/master/chapter_12/chapter_12.md)
 - [客户端](https://github.com/martin-1992/redis_notebook/blob/master/chapter_13/chapter_13.md)
+- [服务器](https://github.com/martin-1992/redis_notebook/blob/master/chapter_14/chapter_14.md)
+- [复制](https://github.com/martin-1992/redis_notebook/blob/master/chapter_15/chapter_15.md)
+- [集群](https://github.com/martin-1992/redis_notebook/blob/master/chapter_17/chapter_17.md)
+- [发布与订阅](https://github.com/martin-1992/redis_notebook/blob/master/chapter_18/chapter_18.md)
