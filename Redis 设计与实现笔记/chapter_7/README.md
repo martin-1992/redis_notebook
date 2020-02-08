@@ -9,7 +9,7 @@
 - zltail 属性的值为 0x3c（十进制为 60），表示如果有一个指向压缩列表起始地址的指针 p，用该指针 p 加上偏移量 60，就能计算出表尾节点 entry3 的地址；
 - zllen 属性的值为 0x3（十进制为 3），表示压缩列表包含三个节点；
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_7/chapter_7_p1.png)
+![avatar](chapter_7_p1.png)
 
 ### 压缩列表节点的构成
 　　由 previous_entry_length、encoding、content 三个部分组成。
@@ -19,16 +19,16 @@
 　　节点的 previous_entry_length 属性以字节为单位，记录压缩列表中前一个节点的长度，previous_entry_length 可以是 1 字节或 5 字节。如果前一节点的长度小于 254 字节，则 previous_entry_length 属性的长度为 1 字节，前一节点的长度保存在该字节里。如果大于 254 字节，则 previous_entry_length 为 5 字节，该属性第一字节设置为 0xFE（十进制 254），后面四个字节保存前一节点的长度。<br />
 　　如下，0xFE 表示是一个五字节长的 previous_entry_length 属性，而后面四个字节 0x00002766（十进制为 10086）是前一节点的实际长度。
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_7/chapter_7_p2.png)
+![avatar](chapter_7_p2.png)
 
 　　因为节点的 previous_entry_length 属性记录了前一个节点的长度，所以根据当前节点的起始地址可计算出前一个节点的起始地址。比如，有一个指向当前节点起始地址的指针 c，用当前指针 c 减去当前节点 previous_entry_length 的值，就能得出指向前一个节点起始地址的指针 p，压缩列表的从表尾向表头遍历操作就是使用这一原理实现的。通过某个节点起始地址的指针，根据这个指针以及这个节点的 previous_entry_length 值，就能找到前一个指针，以此类推。
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_7/chapter_7_p3.png)
+![avatar](chapter_7_p3.png)
 
 #### content 和 encoding
 　　节点的 content 保存节点的值，可以是一个字节数组或整数，值的的类型和长度由节点的 encoding 属性决定。如下，encoding 前两位 00 表示节点保存的是一个字节数组，后六位 001011 表示字节数组长度为 11。
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_7/chapter_7_p4.png)
+![avatar](chapter_7_p4.png)
 
 ### 连锁更新
 　　前面提到，每个节点的 previous_entry_length 属性记录前一个节点的长度，小于 254 字节，则使用一字节长的空间来保存长度值，否则，使用 5 字节长来保存长度值。<br />

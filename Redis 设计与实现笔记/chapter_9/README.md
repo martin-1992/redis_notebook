@@ -13,18 +13,18 @@ struct redisServer {
 
 　　在初始化服务器时，根据服务器状态的 dbnum 属性决定创建多少个数据库，默认为 16 个：
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_9/chapter_9_p1.png)
+![avatar](chapter_9_p1.png)
 
 ### 切换数据库
 　　每个 Redis 客户端都有自己的目标数据库，用于执行读或写命令，默认为 0 号数据库，可通过 SELECT 命令来切换目标数据库，它是通过修改 redisClient.db 指针，来指向切换不同数据库：
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_9/chapter_9_p2.png)
+![avatar](chapter_9_p2.png)
 
 ### 数据库键空间
 　　Redis 是一个键值对的数据库服务器，服务器中的每个数据库都由一个  redis.h / redisDb 结构表示，其中 redisDb 结构的 dict 字典保存了数据库中的所有键值对，将这个字典称为键空间。因为数据库的键空间是一个字典，所以针对数据库的操作，其实是对键空间字典进行操作来实现的。<br />
 　　比如，添加一个新键值对到数据库，实际上是将一个新键值对添加到键空间字典里，键为字符串对象，值为任意一种类型的 Redis 对象。
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_9/chapter_9_p3.png)
+![avatar](chapter_9_p3.png)
 
 　　当使用 Redis 命令对数据库进行读写时，服务器不仅会对键空间执行指定的读写操作，还会执行一些额外的维护操作：
 
@@ -73,7 +73,7 @@ redis>EXPIREATE key 1377257300
 - 过期字典的键是一个指针，这个指针指向键空间中的某个键对象，即某个数据库键；
 - 过期字典的值是一个 long long 类型的整数，保存了键所指向的数据库键的过期时间，毫秒精度的 UNIX 时间戳。
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_9/chapter_9_p4.png)
+![avatar](chapter_9_p4.png)
 
 　　注意，为展示方便，键空间和过期字典重复出现了两次 alphabet 键对象和 book 键对象。实际中，键空间和过期字典的键都指向同一个键对象。
 

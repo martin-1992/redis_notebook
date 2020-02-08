@@ -9,7 +9,7 @@
 - **命令入队。**切换为事务状态后，当客户端发送的命令是 EXEC、DISCARD、WATCH、MULTI 四个命令以外的其他命令，服务器会将这个命令放入一个事务队列里，然后向客户端返回 QUEUED 回复；
 - **事务队列。**每个 Redis 客户端都有自己的事务状态，该事务状态包含一个事务队列，以及一个已入队命令的计数器（事务队列的长度）。事务队列是一个 multiCmd 类型的数组，数组中的每个 multiCmd 结构都保存了一个已入队命令的相关信息，包括指向命令实现函数的指针、命令的参数，以及参数的数量。事务队列以先进先出（FIFO）的方式保存入队的命令，如下 multiState 包含 4 个命令，即 4 个 multiCmd。
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_19/chapter_19_p1.png)
+![avatar](chapter_19_p1.png)
 
 #### 执行事务
 　　EXEC 命令，会遍历客户端的事务队列，执行队列中保存的所有命令，将执行命名的结果返回给客户端。如上图的四个命令，首先执行 SET "name" "Practical Common Lisp"，接着执行 GET "name"，SET "author" "Peter Seibel"，GET "author"。
@@ -20,7 +20,7 @@
 #### 使用 WATCH 命令监视数据库键
 　　每个 Redis 数据库都保存着一个 watched_keys 字典，这个字典的键是某个被 WATCH 命令监视的数据库键，而字典的值则是一个链表，链表中记录了所有监视相应数据库键的客户端。如下图，客户端 c1 和 c2 在监视键 "name"：
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_19/chapter_19_p2.png)
+![avatar](chapter_19_p2.png)
 
 #### 监视机制的触发
 　　对数据库进行修改的命令，会查看 watch_keys 字典，是否有客户端在监视刚刚被命令修改过的数据库键。如果有，则监视被修改键的客户端的 REDIS_DIRTY_CAS 标识打开，标识该客户端的事务安全性已经破坏。

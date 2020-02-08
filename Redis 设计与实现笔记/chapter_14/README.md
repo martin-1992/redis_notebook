@@ -14,18 +14,18 @@
 　　用户在 Redis 客户端输入命令请求，客户端会将这个命令请求转换成协议格式，通过连接到服务器的套接字，将协议格式的命令请求发送
 给服务器。
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_14/chapter_14_p1.png)
+![avatar](chapter_14_p1.png)
 
 #### 读取命令请求
 　　当客户端与服务器之间的连接套接字因为客户端的写入而变得可读时，服务器将调用命令请求处理器执行以下操作：
 
 - 读取套接字中协议格式的命令请求，并将其保存到客户端状态的输入缓冲区里；
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_14/chapter_14_p2.png)
+![avatar](chapter_14_p2.png)
 
 - 对输入缓冲区中的命令请求进行分析，提取出命令请求中包含的命令参数，以及命令参数的个数，分别将参数和参数个数保存到客户端状态的 argv 属性和 argc 属性里；
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_14/chapter_14_p3.png)
+![avatar](chapter_14_p3.png)
 
 - 调用命令执行器，执行客户端指定的命令。
 
@@ -35,7 +35,7 @@
 结构记录了一个 Redis 命令的实现信息。以 SET 命令为例，程序以 argv[0] 作为输入，在命令表中进行查找，命令表将返回 “set”键对应的
  redisCommand 结构，客户端状态的 cmd 指针指向这个 redisCommand 结构，如下图：
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_14/chapter_14_p4.png)
+![avatar](chapter_14_p4.png)
 
 #### 命令执行器（2），预备操作：
 　　目前为止，服务器已经将执行命令所需的命令实现函数（保存在客户端的 cmd 属性）、参数（保存在客户端状态的 argv 属性）、参数个数（
@@ -63,7 +63,7 @@ clint->cmd-proc(clinet);
 setCommand(client);
 ```
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_14/chapter_14_p5.png)
+![avatar](chapter_14_p5.png)
 
 #### 命令执行器（3），调用命令的实现函数
 　　在前面的操作中，服务器已经将要执行命令的实现保存到了客户端状态的 cmd 属性里，并将命令的参数和个数分别保存到客户端状态的
@@ -80,7 +80,7 @@ setCommand(client);
 之后实现函数还会为客户端的套接字关联命令回复处理器，这个处理器负责将命令返回给客户端。前面的 SET 命令，函数调用 setCommand(client) 将
 产生一个 "+OK\r\n" 回复，这个回复会被保存到客户端状态的 buf 属性里。
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_14/chapter_14_p6.png)
+![avatar](chapter_14_p6.png)
 
 #### 命令执行器（4），执行后续工作
 　　执行完实现函数后，还有一些后续工作：
@@ -128,7 +128,7 @@ setCommand(client);
 #### 检查持久化操作的运行状态
 　　服务器状态使用 rdb_child_pid 属性和 aof_child_pid 属性记录执行 BGSAVE 命令和 BGREWRITEAOF 命令的子进程 ID。
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_14/chapter_14_p7.png)
+![avatar](chapter_14_p7.png)
 
 #### 将 AOF 缓冲区中的内容写入 AOF 文件
 　　如果服务器开启了 AOF 持久化功能，并且 AOF 缓冲区里待写入的数据，那么 serverCron 函数会调用相应程序，

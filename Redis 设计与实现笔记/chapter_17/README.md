@@ -5,12 +5,12 @@
 ### 节点
 　　一个 Redis 集群通常由多个节点组成，刚开始节点都是相互独立的，通过向节点使用 CLUSTER MEET 命令，让 node 节点与 ip 和 port 所指定的节点进行握手，握手成功后，node 节点将 ip 和 port 所指定的节点添加到 node 节点当前所在的集群中。如下，为握手的过程：
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_17/chapter_17_p1.png)
+![avatar](chapter_17_p1.png)
 
 #### 启动节点
 　　一个节点就是一个运行在集群模式下的 Redis 服务器，通过设置 cluster-enabled 选项来选择在启动时是否开启服务器的集群模式。
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_17/chapter_17_p2.png)
+![avatar](chapter_17_p2.png)
 
 #### 集群数据结构
 　　每个节点都有对应的 clusterNode 和 clusterState。clusterNode 结构保持一个节点的当前状态，如节点的创建时间、名字、配置纪元等等。clusterState 结构则记录了在当前节点的视角下，集群所处的状态，如集群是在线还是下线，集群包含多少个节点。
@@ -24,7 +24,7 @@
 - 节点 A 收到 节点 B 返回的 PONG 消息，向节点 B 返回一条 PING 消息；
 - 节点 B 收到节点 A 返回的 PING 消息，握手成功。
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_17/chapter_17_p3.png)
+![avatar](chapter_17_p3.png)
 
 #### 槽指派
 　　Redis 集群通过分片的方式来保存数据库中的键值对，集群的整个数据库被分为 16384 个槽，数据库中的每个键都属于这 16384 个槽的其中一个，集群中的每个节点可处理 0 个或最多 16384 个槽。<br />
@@ -39,7 +39,7 @@
 
 - slots 属性是一个二进制位数组，数组的长度为 16384 / 8 = 2048 个字节，包含 16384 个二进制位，即有 16384 个索引，如果该索引位为 1，表示节点负责处理槽 i，如下图为处理槽 0 至槽 7：
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_17/chapter_17_p4.png)
+![avatar](chapter_17_p4.png)
 
 - numslots 属性记录节点负责处理的槽的数量，即 slots 数组中值为 1 的二进制位的数量，如上图为 8。
 
@@ -47,7 +47,7 @@
 　　节点会将自己的 slots 数组通过消息发送给集群中的其它节点，告知其它节点自己目前负责处理哪些槽。<br />
 　　如下图节点 7000 将自己的 slots 数组发给节点 7001 和节点 7002，告知这两个节点，自己负责处理槽 0 至槽 5000。而 7001 和 7002 接收到节点 7000 的slots 数组后，分别在自己的 clusterState.nodes 字典中查找节点 7000 对应的 clusterNode 结构，并对结构中的 slots 数组进行保存或更新，这样集群中的每个节点都会知道数据库中的 16384 个槽分别被指派给了集群中的哪些节点。
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_17/chapter_17_p5.png)
+![avatar](chapter_17_p5.png)
 
 #### 记录集群所有槽的指派信息
 　　clusterState 结构中的 slots 数组记录了集群中所有 16483 个槽的指派信息，每个槽（数组项）都是一个指向 clusterNode 结构的指针，即指派给 clusterNode 结构所代表的节点。<br />
@@ -55,7 +55,7 @@
 　　而 clusterState.slots 数组，将所有槽的指派信息保存在数组里，访问 clusterState.slots[i] 的值即可获知改成槽处理的节点的，复杂度为 O(1)。<br />
 　　总结下，clusterState.slots 数组记录了集群中所有槽的指派信息，而 clusterNode.slots 数组只记录了 clusterNode 结构所代表的节点的槽指派信息。
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_17/chapter_17_p6.png)
+![avatar](chapter_17_p6.png)
 
 #### CLUSTER ADDSLOTS 命令的实现
 　　CLUSTER ADDSLOTS 命令接受一个或多个槽作为参数，并将所有输入的槽指派给接受该命令的节点负责。
@@ -63,7 +63,7 @@
 ### 在集群中执行命令
 　　在对数据库中的 16384 个槽都进行指派后，集群进入上线状态，客户端可对集群中的节点发送数据命令，节点会检查该命令要处理的数据库属于哪个槽，并检查这个槽是否指派给自己，如下图：
   
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/chapter_17/chapter_17_p7.png)
+![avatar](chapter_17_p7.png)
 
 #### 计算键属于哪个槽
 　　节点使用以下算法来计算给定键 key 属于哪个槽，CRC16（key）语句用于计算键 key 的 CRC-16 校验和，而 & 16383 语句用于计算出一个介于 0 至 16383 之间的整数作为键 key 的槽号：
