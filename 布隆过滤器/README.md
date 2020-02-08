@@ -5,15 +5,15 @@
 
 - 布隆过滤器是一个 bit 向量或者说 bit 数组；
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/Bloom%20Filter/bloom_filter_1.png)
+![avatar](bloom_filter_1.png)
 
 - 对一个值使用多个不同的哈希函数，生成多个哈希值，并对每个生成的哈希值指向的 bit 位置 1。假如有三个哈希函数，值为 "alice"，这三个不同的哈希函数生成的哈希值为  1、3、8；
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/Bloom%20Filter/bloom_filter_2.png)
+![avatar](bloom_filter_2.png)
 
 - 以此类推，一个新的值 "martin"，生成的哈希值为 3、4、7；
 
-![Aaron Swartz](https://raw.githubusercontent.com/martin-1992/redis_notebook/master/Bloom%20Filter/bloom_filter_3.png)
+![avatar](bloom_filter_3.png)
 
 - 注意，这里 "alice" 的哈希值为 1、3、8，而 "martin" 的值为 3、4、7，3 的 bit 位被覆盖了。随着存入的值越多，越来越多的 bit 位都为 1，存在某个值没有存储，但该值的三个哈希值被置为 1，导致误判为已经存在。但如果某个值的三个哈希值都不是全部为 1，则肯定不存在；
 - 布隆过滤器不支持删除操作，即将某个 bit 位置为0，因为一个 bit 位可能被多个的值的不同的哈希函数覆盖过（即多次置为1）。如果要删除，则使用计数删除。即删除一个值，对应的 bit 位则减一，添加一个值，对应的 bit 位则加一。
@@ -43,9 +43,9 @@
 ### 总结
 　　布隆过滤器的背后的数学原理在于两个完全随机的数字相冲突的概率很小。因此，可以在很小的误识别率条件下，用很少的空间存储大量信息。误判率越低，则底层维护的数组越长，占用空间越大。因此，误判率实际取值，根据服务器所能够承受的负载来决定。
 
-### reference
+### Reference
 
-https://www.wikiwand.com/zh-hant/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8 <br />
-https://blog.csdn.net/tianyaleixiaowu/article/details/74721877 <br />
-https://zhuanlan.zhihu.com/p/43263751 <br />
-《数学之美》
+- [维基百科-布隆过滤器](https://www.wikiwand.com/zh-hant/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8)
+- [使用 BloomFilter 布隆过滤器解决缓存击穿、垃圾邮件识别、集合判重](https://blog.csdn.net/tianyaleixiaowu/article/details/74721877)
+- [详解布隆过滤器的原理，使用场景和注意事项](https://zhuanlan.zhihu.com/p/43263751)
+- 《数学之美》
