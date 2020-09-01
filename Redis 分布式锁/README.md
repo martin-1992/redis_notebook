@@ -49,8 +49,6 @@ public class RedisLock {
 #### 解锁代码
 　　通过 Lua 脚本来获取锁对应的 requestId 值，然后判断是否与当前客户端的 requestId 相等，是则解锁。因为获取锁和判断 requestId 相等，是两条命令，非原子性。所以使用 Lua 脚本确保原子性。
 
-
-
 ```java
 public class RedisTool {
 
@@ -79,6 +77,48 @@ public class RedisTool {
 ```
 
 ### 集群的分布式锁
-　　集群中，Redis 的主节点挂了，会由从节点替代，继续运行。如果使用单机的分布式锁，则主节点挂了后，锁还在。从节点由于没有锁，所以从节点能加锁。这时会出现两把锁，即两个客户端拥有两把锁。
-　　集群的分布式锁使用 Redlock，为分布式算法。使用少数服从多数原则，类似于 raft，分布式锁推荐使用 ZooKeeper。
+　　集群中，Redis 的主节点挂了，会由从节点替代，继续运行。如果使用单机的分布式锁，则主节点挂了后，锁还在。从节点由于没有锁，所以从节点能加锁。这时会出现两把锁，即两个客户端拥有两把锁。<br />
+　　集群的分布式锁有以下几种：
 
+- MySQL，分为悲观锁和乐观锁，不适用高分布式环境；
+    1. 悲观锁，比如创建一张表，要获取锁时，先去这张表获取，类似行锁；
+    2. 乐观锁，在表中加一个版本号字段，使用 CAS 方式更新。
+- ZK 分布式锁，根据临时顺序节点的特性来创建分布式锁，性能较差，不适用高分布式的环境；
+- Redis 分布式锁；
+    1. 使用 jedis 客户端，自己实现分布式锁；
+    2. Redission 封装了分布式锁的实现，可直接调用；
+    3. RedLock，解决主从的锁同步问题，比如机器 A 向主机器申请锁，这锁没有同步到 B 机器，然后主机器宕机了。这时 B 机器去从机器能申请到锁。RedLock 解决方法是使用少数服从多数原则，机器 A 申请锁时，是向多个 redis 机器申请锁，当获得多数锁时，才成功获取锁，适用于更严格的场景。
+- 自研分布式锁，如谷歌的 Chubby。
+
+```java
+public class RedisTool {
+
+    private static final String LOCK_SUCCESS = "OK";
+
+    private static final String SET_IF_NOT_EXIST = "NX";
+
+    private static final String SET_WITH_EXPIRE_TIME = "PX";
+
+    /**
+     * 尝试获取分布式锁
+     * @param jedis Redis 客户端
+     * @param lockKey 锁
+     * @param requestId 请求标识
+     * @param expireTime 过期时间
+     * @return 是否获取成功
+     */
+    public static boolean tryGetDistributedLock(Jedis jedis, String lockKey, String requestId, int expireTime) {
+        String result = jedis.set(lockKey, requestId, SET_IF_NOT_EXIST, SET_WITH_EXPIRE_TIME, expireTime);
+        if (LOCK_SUCCESS.equals(result)) {
+            return true;
+        }
+        return false;
+    }
+}
+```
+
+### reference
+
+- [Redis 分布式锁的正确实现方式（Java 版）](https://mp.weixin.qq.com/s/qJK61ew0kCExvXrqb7-RSg)
+- [漫画：什么是分布式锁](https://mp.weixin.qq.com/s/8fdBKAyHZrfHmSajXT_dnA)
+- [搞懂“分布式锁”，看这篇文章就对了](https://mp.weixin.qq.com/s/hoZB0wdwXfG3ECKlzjtPdw)
