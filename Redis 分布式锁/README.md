@@ -80,7 +80,7 @@ public class RedisTool {
 　　集群中，Redis 的主节点挂了，会由从节点替代，继续运行。如果使用单机的分布式锁，则主节点挂了后，锁还在。从节点由于没有锁，所以从节点能加锁。这时会出现两把锁，即两个客户端拥有两把锁。<br />
 　　集群的分布式锁有以下几种：
 
-- MySQL，分为悲观锁和乐观锁，不适用高分布式环境；
+- MySQL，适用数据库的唯一索引，分为悲观锁和乐观锁，不适用高分布式环境；
     1. 悲观锁，比如创建一张表，要获取锁时，先去这张表获取，类似行锁；
     2. 乐观锁，在表中加一个版本号字段，使用 CAS 方式更新。
 - ZK 分布式锁，根据临时顺序节点的特性来创建分布式锁，性能较差，不适用高分布式的环境；
@@ -122,3 +122,4 @@ public class RedisTool {
 - [Redis 分布式锁的正确实现方式（Java 版）](https://mp.weixin.qq.com/s/qJK61ew0kCExvXrqb7-RSg)
 - [漫画：什么是分布式锁](https://mp.weixin.qq.com/s/8fdBKAyHZrfHmSajXT_dnA)
 - [搞懂“分布式锁”，看这篇文章就对了](https://mp.weixin.qq.com/s/hoZB0wdwXfG3ECKlzjtPdw)
+- [基于 Redis 的分布式锁](https://crossoverjie.top/2018/03/29/distributed-lock/distributed-lock-redis/)
