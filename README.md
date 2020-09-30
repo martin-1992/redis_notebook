@@ -7,7 +7,7 @@
 
 #### [点赞](https://github.com/martin-1992/redis_notebook/tree/master/Redis%20%E5%BA%94%E7%94%A8/%E7%82%B9%E8%B5%9E)
 　　部分内容来自 [[WeiDesign]微博计数器的设计(下)](https://blog.cydu.net/weidesign/2012/09/09/weibo-counter-service-design-2/#)，介绍了在大数据量下，如何对 redis 存储进行优化，从 key 和 value 两方面入手。<br />
-　　用到的方法有，一是为 0 的都不存储，查询不到即返回 0。二是 key 和 value 使用数组，在进行压缩。三是根据 ID 的时间属性区分冷、热数据，冷数据存到磁盘。
+　　用到的方法有，**一是为 0 的都不存储，查询不到即返回 0。二是 key 和 value 使用数组，在进行压缩。三是根据 ID 的时间属性区分冷、热数据，冷数据存到磁盘。**
 
 - MySQL 实现，维护三张表；
     1. 表为用户 ID + 文章 ID，保存每个人的点赞信息，判断该用户是否点赞过某文章，获取某文章的点赞用户列表；
