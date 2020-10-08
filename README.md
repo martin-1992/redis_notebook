@@ -2,8 +2,35 @@
 
 ### [Redis 应用](https://github.com/martin-1992/redis_notebook/tree/master/Redis%20%E5%BA%94%E7%94%A8)
 
+- 字符串 string；
+    1. 作为计数器，比如点赞数、阅读数、转发数等；
+    2. 分布式 ID，每次从 redis 中 incr 获取加一的 ID。
+- 列表 List，作为消息队列或栈；
+- 集合 Set；
+    1. 求两个集合的交集，可作为共同关注、好友等；
+    2. 秒杀集合，结合发布订阅，将请求添加到集合中，进行消费为其创建订单，集合长度超过秒杀数量则返回秒杀失败。
+- 哈希表 Hash，缓存对象信息，比如用户信息、购物车信息等；
+- 有序集合 Zset，排行榜；
+- Geospatial，以给定经纬度为中心，找出某一半径内的元素，可获取身边的人；
+- Hyperloglog，基数统计算法，统计 UV；
+- 位图 Bitmap。
+    1. 作为签到、是否登录等；
+    2. 布隆过滤器，redis 4.0 后不用位图，官方有提供。
+- 分布式锁。
+
 #### 计数器
 　　string 结构，最简单的结构，使用 incr 进行加一。公众号文章、微博，都有阅读数。
+
+#### 消息队列
+　　使用列表对象实现，列表是双端队列，可实现队列和栈，分为 Lpush、Lpop、Rpush、Rpop。<br />
+　　队列，即模仿 MQ 的入队和出队。
+
+#### 共同关注、好友
+　　使用 redis 集合实现，两个集合的交集即可得出共同关注、好友等。
+
+- 差集，SDIFF key1 key2；
+- 交集，SINTER key1 key2；
+- 并集，SUNION key1 key2。
 
 #### [点赞](https://github.com/martin-1992/redis_notebook/tree/master/Redis%20%E5%BA%94%E7%94%A8/%E7%82%B9%E8%B5%9E)
 　　部分内容来自 [[WeiDesign]微博计数器的设计(下)](https://blog.cydu.net/weidesign/2012/09/09/weibo-counter-service-design-2/#)，介绍了在大数据量下，如何对 redis 存储进行优化，从 key 和 value 两方面入手。<br />
@@ -25,10 +52,12 @@
 
 #### 分布式 ID
 　　最简单的，使用 string 的 incr。每次获取全局业务 ID，到 redis 中进行 incr，操作成功，则使用该 ID。缺点是业务量大，频繁请求，网络开销大。<br />
-　　第二种是从 redis 中获取一批 key 进行操作，使用 string 的 incrby，一次性增加 2000 等。incrby 成功后，在本地机器 A 发放 1000 ~ 3000 的用户 ID。即使本地缓存丢失，就浪费一批 ID，可重新获取新的一批。
+　　第二种是从 redis 中获取一批 key 进行操作，使用 string 的 incrby，一次性增加 2000 等。incrby 成功后，在本地机器 A 发放 1000 ~ 3000 的用户 ID。即使本地缓存丢失，就浪费一批 ID，可重新获取新的一批。<br />
+　　如果有多台机器来作为分布式 ID 集群，比如 3 台机器，每台机器的初始 ID 为 1，2，3，每次 incrby 3 即可，即每次增加步长为 3。
 
 #### 缓存对象信息
-　　以购物车为例，使用哈希表 hash 来实现，key 格式为 cart:购物车 ID，比如 cart:3234，购物车 ID 为 3234 的哈希表。
+　　以购物车为例，使用哈希表 hash 来实现，key 格式为 cart:购物车 ID，比如 cart:3234，购物车 ID 为 3234 的哈希表。<br />
+　　哈希表适合对象存储，string 适合字符串存储。
 
 #### 发布和订阅，秒杀
 　　两个 redis 集合 set，一个 setA 查询该用户是否已秒杀过，另一个 setB 为已被秒杀商品的集合，如果该 setB 长度超过指定的秒杀数，则表示抢完。<br />
@@ -44,6 +73,41 @@
 - redis 的订单频道 orderChannel 接到消息后，解析消息，将用户 ID 和活动 ID 添加到秒杀集合中；
 - 定时任务，定时遍历秒杀集合，为集合中的用户创建秒杀订单记录，同时会将该用户添加到用户集合，防止同一个用户多次抢购；
 - 创建完订单记录，商品数量减一后，会发送消息到 imChannel。由前端解析该消息，推给用户表示已经抢购成功。会有个订单编号，用户点击跳转到订单详情页面完成后面的支付逻辑。
+
+#### 排行榜
+　　有序集合 Zset 实现排行榜，消息排序（根据消息权重区分重要消息、普通消息来排序）等。
+
+#### [布隆过滤器](https://github.com/martin-1992/redis_notebook/tree/master/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8)
+　　**内存占用小，解决缓存穿透的方法。** 缓存穿透指查询不存在的值，会去存储层查询。大流量情况下，会对存储层造成大的负担。<br />
+　　**它由一个 bit 数组和一组 Hash 算法构成，可用于判断一个元素是否在一个集合中。** 它是将所有地址经过多个 Hash 算法，映射到一个 bit 数组，其数学原理在于两个完全随机的数字相冲突的概率很小。
+
+#### [Redis 分布式锁](https://github.com/martin-1992/redis_notebook/tree/master/Redis%20%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81)
+
+- 使用 jedis 客户端，自己实现分布式锁；
+- Redission 封装了分布式锁的实现，可直接调用；
+- RedLock，解决主从的锁同步问题。
+    1. 比如机器 A 向主机器申请锁，这锁没有同步到 B 机器，然后主机器宕机了。这时 B 机器去从机器能申请到锁；
+    2. RedLock 解决方法是使用少数服从多数原则，机器 A 申请锁时，是向多个 redis 机器申请锁，当获得多数锁时，才成功获取锁，适用于更严格的场景。
+
+#### 身边的人
+　　Geospatial 属于 redis 的特殊数据类型，**以给定经纬度为中心，找出某一半径内的元素。** <br />
+　　GEO 底层实现原理是 Zset，使用 Zset 命令来操作。
+
+- geoadd china:city 116.40 39.90 beijing 114.05 22.52 shengzhen，添加，需要经纬度；
+- geopos china:city beijing，获取指定 key 的经纬度；
+- geodist china:city beijing shengzhen km，获取两地的距离；
+- georadius weixin:person 115 20 10km count 100，查询经纬度 115、20 为中心，寻找 10km 以内的人，筛选获取 100 个。
+
+#### 统计 UV
+　　Hyperloglog 属于 redis 的特殊数据类型，作为基数统计算法，**可用于估计网页的 UV。** <br />
+　　对比使用 set 来保存用户 ID，Hyperloglog 优点是占用内存固定，只要 12 kb，缺点是为估计，只能计数，且有 0.81% 错误率。<br />
+　　如果需要精确统计，并获得每个人的 ID，使用 set。
+
+#### Bitmap
+　　只有两个状态 0 和 1，非常省内存。可用为统计用户信息，比如签到、是否登录等。
+
+- setbit 标识:日期 uid 1，比如 uid 为 546 的用户在 2020.03.15 签到，则为 setbit SignIn:20200315 546 1；
+- getbit 标识:日期 uid，获取某位用户是否签到，比如 setbit SignIn:20200315 546；
 
 ### [Redis 事务](https://github.com/martin-1992/redis_notebook/tree/master/Redis%20%E4%BA%8B%E5%8A%A1)
 　　非原子性的，有一条命令失败，也会执行下去，**本质是将多条命令放到一起执行。** <br />
@@ -73,15 +137,5 @@
 　　当 Redis 的内存超过期望内存 maxmemory 时，会执行内存淘汰机制。Redis 的过期机制有可能会导致内存泄漏，需要对 key 执行淘汰策略。<br />
 　　常用的有近似 LRU 算法，Redis 随机抽取 5 个 key，检查这 5 个 key 最后一次的访问时间戳，丢弃最旧的那个，一直重复该流程。
 
-### [布隆过滤器](https://github.com/martin-1992/redis_notebook/tree/master/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8)
-　　**内存占用小，解决缓存穿透的方法。** 缓存穿透指查询不存在的值，会去存储层查询。大流量情况下，会对存储层造成大的负担。<br />
-　　**它由一个 bit 数组和一组 Hash 算法构成，可用于判断一个元素是否在一个集合中。** 它是将所有地址经过多个 Hash 算法，映射到一个 bit 数组，其数学原理在于两个完全随机的数字相冲突的概率很小。
-
-### [Redis 分布式锁](https://github.com/martin-1992/redis_notebook/tree/master/Redis%20%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81)
-
-- 使用 jedis 客户端，自己实现分布式锁；
-- Redission 封装了分布式锁的实现，可直接调用；
-- RedLock，解决主从的锁同步问题。
-    1. 比如机器 A 向主机器申请锁，这锁没有同步到 B 机器，然后主机器宕机了。这时 B 机器去从机器能申请到锁；
-    2. RedLock 解决方法是使用少数服从多数原则，机器 A 申请锁时，是向多个 redis 机器申请锁，当获得多数锁时，才成功获取锁，适用于更严格的场景。
-
+### redis 性能测试
+　　使用 redis-benchmark，比如 redis-benchmark -h localhost -p 6379 -c 100 -n 100000，表示测试 redis 地址为 localhost:6369，100 个并发连接，100000 个请求。
