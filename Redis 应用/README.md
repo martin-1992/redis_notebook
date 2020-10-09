@@ -1,5 +1,5 @@
 ### 计数器
-　　string 结构，最简单的结构，使用 incr 进行加一。公众号文章、微博，都有阅读数。<br />
+　　string 结构，最简单的结构，使用 incr 进行加一。公众号文章、微博，都有阅读数。
 
 ```redis
 127.0.0.1:6379[2]> get example_key
@@ -7,6 +7,20 @@
 127.0.0.1:6379[2]> incr example_key
 37
 ```
+
+### session 管理
+　　每次用户更新或查询登录都直接从 redis 中获取。
+
+### 消息队列
+　　使用列表对象实现，列表是双端队列，可实现队列和栈，分为 Lpush、Lpop、Rpush、Rpop。<br />
+　　队列，即模仿 MQ 的入队和出队。
+
+### 共同关注、好友
+　　使用 redis 集合实现，两个集合的交集即可得出共同关注、好友等。
+
+- 差集，SDIFF key1 key2；
+- 交集，SINTER key1 key2；
+- 并集，SUNION key1 key2。
 
 ### 防止并发，限流
 　　string 结构，使用 incr 加一。当 incr 加的值超过限制值，则返回请求频繁的提示。<br />
@@ -116,6 +130,8 @@ public booelan getLock(String lockKey, String lockValue){
 ```
 
 ### 排行榜
+　　有序集合 Zset 实现排行榜，消息排序（根据消息权重区分重要消息、普通消息来排序）等。<br />
+　　比如统计主播的收益排行榜，主播 id 作为 member，当天打赏的活动礼物对应的热度值作为 score, 通过 zrangebyscore 获取主播活动日榜。
 
 ### 发布和订阅，秒杀
 　　两个 redis 集合 set，一个 setA 查询该用户是否已秒杀过，另一个 setB 为已被秒杀商品的集合，如果该 setB 长度超过指定的秒杀数，则表示抢完。<br />
@@ -132,3 +148,27 @@ public booelan getLock(String lockKey, String lockValue){
 - 定时任务，定时遍历秒杀集合，为集合中的用户创建秒杀订单记录，同时会将该用户添加到用户集合，防止同一个用户多次抢购；
 - 创建完订单记录，商品数量减一后，会发送消息到 imChannel。由前端解析该消息，推给用户表示已经抢购成功。会有个订单编号，用户点击跳转到订单详情页面完成后面的支付逻辑。
 
+### 身边的人
+　　Geospatial 属于 redis 的特殊数据类型，**以给定经纬度为中心，找出某一半径内的元素。** <br />
+　　GEO 底层实现原理是 Zset，使用 Zset 命令来操作。
+
+- geoadd china:city 116.40 39.90 beijing 114.05 22.52 shengzhen，添加，需要经纬度；
+- geopos china:city beijing，获取指定 key 的经纬度；
+- geodist china:city beijing shengzhen km，获取两地的距离；
+- georadius weixin:person 115 20 10km count 100，查询经纬度 115、20 为中心，寻找 10km 以内的人，筛选获取 100 个。
+
+### 统计 UV
+　　Hyperloglog 属于 redis 的特殊数据类型，作为基数统计算法，**可用于估计网页的 UV。** <br />
+　　对比使用 set 来保存用户 ID，Hyperloglog 优点是占用内存固定，只要 12 kb，缺点是为估计，只能计数，且有 0.81% 错误率。<br />
+　　如果需要精确统计，并获得每个人的 ID，使用 set。
+
+### Bitmap
+　　只有两个状态 0 和 1，非常省内存。可用为统计用户信息，比如签到、是否登录等。
+
+- setbit 标识:日期 uid 1，比如 uid 为 546 的用户在 2020.03.15 签到，则为 setbit SignIn:20200315 546 1；
+- getbit 标识:日期 uid，获取某位用户是否签到，比如 setbit SignIn:20200315 546；
+
+
+### reference
+
+- [Redis 缓存性能实践及总结](https://mp.weixin.qq.com/s/bsAw0VKhP_SYngvKMoByAQ)
