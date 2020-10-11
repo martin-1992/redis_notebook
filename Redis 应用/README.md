@@ -15,6 +15,17 @@
 　　使用列表对象实现，列表是双端队列，可实现队列和栈，分为 Lpush、Lpop、Rpush、Rpop。<br />
 　　队列，即模仿 MQ 的入队和出队。
 
+### 延时队列
+　　value 为序列化的任务消息，score 为下一次任务消息运行的时间。轮询 zset 中 score 值大于 now 的任务消息进行处理。<br />
+　　在多线程情况下，为防止多个线程竞争轮询，写成 Lua 脚本保证原子性。
+
+### 服务发现
+　　zset 保存单个服务列表，value 为服务地址，score 为心跳时间。
+
+- 服务提供者每隔几秒调用 zadd，类似使用心跳来汇报存活；
+- 停止服务时，服务提供者调用 zrem 来移除自己；
+- 还有一个线程，用于轮询，处理没使用 zadd 发送心跳的服务提供者，将其移除。
+
 ### 共同关注、好友
 　　使用 redis 集合实现，两个集合的交集即可得出共同关注、好友等。
 
@@ -168,7 +179,10 @@ public booelan getLock(String lockKey, String lockValue){
 - setbit 标识:日期 uid 1，比如 uid 为 546 的用户在 2020.03.15 签到，则为 setbit SignIn:20200315 546 1；
 - getbit 标识:日期 uid，获取某位用户是否签到，比如 setbit SignIn:20200315 546；
 
+　　还可以用于统计阅读量，知道哪个用户阅读该篇文章。将用户 ID（可能为字符串、不连续整数） 映射到一张连续的整数表中。<br />
+　　为一篇文章创建一个 bitmap，当用户阅读了该篇文章，则 bitmap 对应位置赋值为 1。缺点是如果一篇文章只有几个人阅读，则该 bitmap 会有大量 0，很浪费空间，使用咆哮位图来解决。
 
 ### reference
 
 - [Redis 缓存性能实践及总结](https://mp.weixin.qq.com/s/bsAw0VKhP_SYngvKMoByAQ)
+- [Redis 精确去重计数 —— 咆哮位图](https://zhuanlan.zhihu.com/p/68019716)

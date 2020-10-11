@@ -96,7 +96,7 @@ public class RedisTool {
 
 - 机器 A 获取锁，且设置了锁的超时时间，由于某些原因（比如 GC 时间长）导致在规定时间内没执行完，锁自动失效并释放。然后机器 B 获取锁，这时机器 A 还在执行任务，所以相当于机器 A 和机器 B 都获取了锁；
 - 时钟跳跃问题。机器 A 和机器 B 时间不同，影响锁的过期时间，会出现机器 A 和机器 B 获取到同一把锁。Zk 则不会出现该问题，没有使用时间，而是用自增序列来获取锁；
-- 长时间的网络 I/O，跟第一个问题类似，也是在规定时间内没执行完任务。导致机器 A 在执行任务时，机器 B 获取到锁。Zk 不会出现该问题，因为是要先获得临时节点才能获取锁；
+- 长时间的网络 I/O，跟第一个问题类似，也是在规定时间内没执行完任务。导致机器 A 在执行任务时，机器 B 获取到锁。Zk 不会出现该问题，因为是要先获得临时节点才能获取锁。
 
 
 ```java
@@ -124,6 +124,33 @@ public class RedisTool {
         return false;
     }
 }
+```
+
+### 删除分布式锁存在问题
+　　使用 SET NX 来只是一个分布式锁，会设置超时时间，防止崩溃变死锁。
+
+```redis
+SET resource_name random_value NX PX 300
+```
+
+　　但不能直接删除 key 来释放锁，比如 APP1 获取锁后，由于某些原因，超时 300，锁被释放，APP2 获取锁。这时 APP1 又运行起来，并执行删除锁程序，则会把 APP2 的锁给删了。<br />
+　　解决方案，是给锁一个随机值，使用 CAS 来删除。
+
+```redis
+if get(resource_id) == my_random_value
+    del resource_id
+
+# redis 官方推荐
+# 加锁
+set lock:$user_id owner_id nx ex=5
+# 释放锁
+if redis.call("get", KEYS[1]) == ARGV[1] then
+    return redis.call("del", KEYS[1])
+else
+    return 0
+end
+# 等价于
+del_if_equals lock:$user_id owner_id
 ```
 
 ### reference
